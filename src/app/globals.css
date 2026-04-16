@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0b;
+  --foreground: #ecedee;
+  --accent: #00f2ff; /* Aura Cyber */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Efek Glow untuk Tabel */
+.glow-border {
+  box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+}
