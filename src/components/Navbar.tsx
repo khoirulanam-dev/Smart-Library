@@ -17,6 +17,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  if (pathname === "/login") return null;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);

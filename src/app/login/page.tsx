@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Lock, User } from "lucide-react";
 
+
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
