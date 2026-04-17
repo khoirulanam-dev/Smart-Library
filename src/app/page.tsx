@@ -177,7 +177,7 @@ export default function LibraryDashboard() {
           {/* TABEL PEMINJAMAN AKTIF */}
           <section className="space-y-4">
             <h2 className="text-xs font-bold text-zinc-200 flex items-center gap-2 px-2 uppercase tracking-widest">
-              <Clock size={14} className="text-amber-500" /> Live Circulation
+              <Clock size={14} className="text-amber-500" /> Buku Dipinjam
             </h2>
             <div className="bg-[#111113] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
               <table className="w-full text-left text-[11px]">
@@ -211,7 +211,7 @@ export default function LibraryDashboard() {
               </table>
               {borrowedBooks.length === 0 && (
                 <div className="p-10 text-center text-zinc-700 italic text-xs">
-                  No active loans found.
+                  Tidak ada buku dipinjam
                 </div>
               )}
             </div>
@@ -220,8 +220,7 @@ export default function LibraryDashboard() {
           {/* KATALOG MASTER & STOK */}
           <section className="space-y-4">
             <h2 className="text-xs font-bold text-zinc-200 flex items-center gap-2 px-2 uppercase tracking-widest">
-              <List size={14} className="text-cyan-500" /> Book Inventory
-              (Master)
+              <List size={14} className="text-cyan-500" /> Storage Buku
             </h2>
             <div className="bg-[#111113] border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
               <table className="w-full text-left text-[11px]">
