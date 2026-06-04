@@ -5,7 +5,7 @@ import { getErrorMessage, reportSupabaseError } from "@/lib/supabase-error";
 import { toast } from "sonner";
 import { 
   BookPlus, Hash, Bookmark, Trash2, 
-  Edit3, Save, X, Loader2, Search 
+  Edit3, Info, Save, X, Loader2, Search 
 } from "lucide-react";
 
 type BookItem = {
@@ -29,6 +29,7 @@ export default function ManageBooks() {
   
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState({ uid: "", title: "" });
+  const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
 
   const fetchData = async () => {
     const { data, error } = await supabase
@@ -247,6 +248,12 @@ export default function ManageBooks() {
                           </>
                         ) : (
                           <>
+                            <button
+                              onClick={() => setSelectedBook(item)}
+                              className="p-2 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 transition opacity-0 group-hover:opacity-100"
+                            >
+                              <Info size={14}/>
+                            </button>
                             <button 
                               onClick={() => {
                                 setEditingId(item.id);
@@ -278,6 +285,62 @@ export default function ManageBooks() {
         </section>
 
       </div>
+      {selectedBook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-start justify-between gap-4 border-b border-zinc-800 p-6">
+              <div>
+                <p className="text-[9px] text-cyan-500 uppercase tracking-widest mb-2">
+                  Book Detail
+                </p>
+                <h2 className="text-white text-2xl font-black tracking-tighter">
+                  {selectedBook.buku_master?.judul || "Judul Tidak Ditemukan"}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedBook(null)}
+                className="p-2 bg-zinc-900 text-zinc-500 rounded-lg hover:text-white transition"
+              >
+                <X size={16}/>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 p-6 text-xs">
+              <div className="border border-zinc-800 rounded-xl p-4">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  UID Buku
+                </p>
+                <p className="text-cyan-400 font-bold mt-2">
+                  {selectedBook.uid_buku}
+                </p>
+              </div>
+              <div className="border border-zinc-800 rounded-xl p-4">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  Status
+                </p>
+                <p className="text-white font-bold mt-2 uppercase">
+                  {selectedBook.status}
+                </p>
+              </div>
+              <div className="border border-zinc-800 rounded-xl p-4">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  Stok Tersedia
+                </p>
+                <p className="text-emerald-400 font-bold mt-2">
+                  {selectedBook.buku_master?.stok_tersedia ?? "-"}
+                </p>
+              </div>
+              <div className="border border-zinc-800 rounded-xl p-4">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  Total Stok
+                </p>
+                <p className="text-zinc-100 font-bold mt-2">
+                  {selectedBook.buku_master?.total_stok ?? "-"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

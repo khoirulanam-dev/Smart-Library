@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
   Book,
@@ -15,8 +15,8 @@ import { toast } from "sonner";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   if (pathname === "/login") return null;
 
   const handleLogout = async () => {

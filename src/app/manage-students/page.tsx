@@ -10,6 +10,7 @@ import {
   IdCard,
   Trash2,
   Edit3,
+  Info,
   Save,
   X,
   Loader2,
@@ -32,6 +33,7 @@ export default function ManageStudents() {
   // State untuk Edit
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState({ uid: "", nama: "", nim: "" });
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const fetchData = async () => {
     const { data, error } = await supabase
@@ -287,6 +289,12 @@ export default function ManageStudents() {
                         ) : (
                           <>
                             <button
+                              onClick={() => setSelectedStudent(s)}
+                              className="p-2 bg-zinc-800 text-zinc-400 rounded-lg hover:bg-zinc-700 transition opacity-0 group-hover:opacity-100"
+                            >
+                              <Info size={14} />
+                            </button>
+                            <button
                               onClick={() => {
                                 setEditingId(s.id);
                                 setEditData({
@@ -321,6 +329,54 @@ export default function ManageStudents() {
           </div>
         </section>
       </div>
+      {selectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="w-full max-w-lg bg-[#111113] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-start justify-between gap-4 border-b border-zinc-800 p-6">
+              <div>
+                <p className="text-[9px] text-emerald-500 uppercase tracking-widest mb-2">
+                  Student Detail
+                </p>
+                <h2 className="text-white text-2xl font-black tracking-tighter">
+                  {selectedStudent.nama}
+                </h2>
+              </div>
+              <button
+                onClick={() => setSelectedStudent(null)}
+                className="p-2 bg-zinc-900 text-zinc-500 rounded-lg hover:text-white transition"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-6 text-xs">
+              <div className="border border-zinc-800 rounded-xl p-4">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  NIM
+                </p>
+                <p className="text-zinc-100 font-bold mt-2">
+                  {selectedStudent.nim}
+                </p>
+              </div>
+              <div className="border border-zinc-800 rounded-xl p-4">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  UID Kartu
+                </p>
+                <p className="text-emerald-400 font-bold mt-2">
+                  {selectedStudent.uid_kartu}
+                </p>
+              </div>
+              <div className="border border-zinc-800 rounded-xl p-4 sm:col-span-2">
+                <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
+                  Status
+                </p>
+                <p className="text-emerald-400 font-bold mt-2 uppercase">
+                  Verified Member
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
