@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getErrorMessage, reportSupabaseError } from "@/lib/supabase-error";
 import { toast } from "sonner";
 import {
   UserPlus,
@@ -15,9 +16,16 @@ import {
   Search,
 } from "lucide-react";
 
+type Student = {
+  id: number;
+  uid_kartu: string;
+  nama: string;
+  nim: string;
+};
+
 export default function ManageStudents() {
   const [mhs, setMhs] = useState({ uid: "", nama: "", nim: "" });
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -30,6 +38,11 @@ export default function ManageStudents() {
       .from("mahasiswa")
       .select("*")
       .order("id", { ascending: false });
+
+    if (error) {
+      reportSupabaseError("Gagal mengambil data mahasiswa", error);
+      return;
+    }
 
     if (data) setStudents(data);
   };
@@ -55,8 +68,10 @@ export default function ManageStudents() {
       toast.success("Mahasiswa Berhasil Terdaftar!");
       setMhs({ uid: "", nama: "", nim: "" });
       fetchData();
-    } catch (error: any) {
-      toast.error("Gagal mendaftar: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Gagal mendaftar", {
+        description: getErrorMessage(error),
+      });
     } finally {
       setLoading(false);
     }
@@ -71,8 +86,10 @@ export default function ManageStudents() {
 
       toast.success("Data Mahasiswa Berhasil Dihapus");
       fetchData();
-    } catch (error: any) {
-      toast.error("Gagal menghapus data");
+    } catch (error: unknown) {
+      toast.error("Gagal menghapus data", {
+        description: getErrorMessage(error),
+      });
     }
   };
 
@@ -92,8 +109,10 @@ export default function ManageStudents() {
       toast.success("Data Berhasil Diperbarui");
       setEditingId(null);
       fetchData();
-    } catch (error) {
-      toast.error("Gagal memperbarui data");
+    } catch (error: unknown) {
+      toast.error("Gagal memperbarui data", {
+        description: getErrorMessage(error),
+      });
     }
   };
 

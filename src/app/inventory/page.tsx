@@ -1,34 +1,56 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { reportSupabaseError } from "@/lib/supabase-error";
 import {
   BookPlus,
   Trash2,
-  Database,
   UserPlus,
-  Fingerprint,
 } from "lucide-react";
 
+type InventoryBook = {
+  id: number | string;
+  uid_buku: string;
+  judul: string;
+  stok: number;
+};
+
+type InventoryStudent = {
+  id: number | string;
+  uid_kartu: string;
+  nama: string;
+};
+
 export default function InventoryPage() {
-  const [books, setBooks] = useState<any[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
+  const [books, setBooks] = useState<InventoryBook[]>([]);
+  const [students, setStudents] = useState<InventoryStudent[]>([]);
   const [activeTab, setActiveTab] = useState<"books" | "students">("books");
 
   const fetchData = async () => {
-    const { data: b } = await supabase
+    const { data: b, error: booksError } = await supabase
       .from("buku")
       .select("*")
       .order("created_at", { ascending: false });
-    const { data: s } = await supabase
+    if (booksError) {
+      reportSupabaseError("Gagal mengambil inventory buku", booksError);
+    }
+
+    const { data: s, error: studentsError } = await supabase
       .from("mahasiswa")
       .select("*")
       .order("created_at", { ascending: false });
+    if (studentsError) {
+      reportSupabaseError("Gagal mengambil inventory mahasiswa", studentsError);
+    }
+
     if (b) setBooks(b);
     if (s) setStudents(s);
   };
 
   useEffect(() => {
-    fetchData();
+    queueMicrotask(() => {
+      fetchData();
+    });
   }, []);
 
   return (

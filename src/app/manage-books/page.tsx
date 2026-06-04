@@ -1,19 +1,33 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getErrorMessage, reportSupabaseError } from "@/lib/supabase-error";
 import { toast } from "sonner";
 import { 
   BookPlus, Hash, Bookmark, Trash2, 
   Edit3, Save, X, Loader2, Search 
 } from "lucide-react";
 
+type BookItem = {
+  id: number;
+  uid_buku: string;
+  status: string;
+  master_id: number;
+  buku_master?: {
+    id: number;
+    judul: string;
+    total_stok: number;
+    stok_tersedia: number;
+  } | null;
+};
+
 export default function ManageBooks() {
   const [book, setBook] = useState({ uid: "", title: "" });
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<BookItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editData, setEditData] = useState({ uid: "", title: "" });
 
   const fetchData = async () => {
@@ -27,8 +41,13 @@ export default function ManageBooks() {
         buku_master (id, judul, total_stok, stok_tersedia)
       `)
       .order("id", { ascending: false });
+
+    if (error) {
+      reportSupabaseError("Gagal mengambil data buku", error);
+      return;
+    }
     
-    if (data) setItems(data);
+    if (data) setItems(data as unknown as BookItem[]);
   };
 
   useEffect(() => {
@@ -39,33 +58,43 @@ export default function ManageBooks() {
     e.preventDefault();
     setLoading(true);
     try {
-      let { data: master } = await supabase
+      const { data: master, error: masterError } = await supabase
         .from("buku_master")
         .select("id, total_stok, stok_tersedia")
         .eq("judul", book.title)
-        .single();
+        .maybeSingle();
+
+      if (masterError) throw masterError;
 
       let masterId;
       if (!master) {
         const { data: newMaster, error: mErr } = await supabase
           .from("buku_master")
           .insert([{ judul: book.title, total_stok: 1, stok_tersedia: 1 }])
-          .select().single();
+          .select()
+          .single();
         if (mErr) throw mErr;
         masterId = newMaster.id;
       } else {
-        await supabase.from("buku_master")
+        const { error: updateMasterError } = await supabase.from("buku_master")
           .update({ total_stok: master.total_stok + 1, stok_tersedia: master.stok_tersedia + 1 })
           .eq("id", master.id);
+        if (updateMasterError) throw updateMasterError;
         masterId = master.id;
       }
 
-      await supabase.from("buku_item").insert([{ uid_buku: book.uid.toUpperCase(), master_id: masterId }]);
+      const { error: itemError } = await supabase
+        .from("buku_item")
+        .insert([{ uid_buku: book.uid.toUpperCase(), master_id: masterId }]);
+      if (itemError) throw itemError;
+
       toast.success("Buku Berhasil Terdaftar!");
       setBook({ uid: "", title: "" });
       fetchData();
-    } catch (error: any) {
-      toast.error("Gagal mendaftar: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Gagal mendaftar", {
+        description: getErrorMessage(error),
+      });
     } finally {
       setLoading(false);
     }
@@ -75,33 +104,54 @@ export default function ManageBooks() {
     if (!confirm("Yakin ingin menghapus unit buku ini? Stok akan berkurang otomatis.")) return;
 
     try {
-      const { data: master } = await supabase.from("buku_master").select("*").eq("id", masterId).single();
+      const { data: master, error: masterError } = await supabase
+        .from("buku_master")
+        .select("*")
+        .eq("id", masterId)
+        .single();
+      if (masterError) throw masterError;
       
       if (master) {
-        await supabase.from("buku_master").update({
+        const { error: updateMasterError } = await supabase.from("buku_master").update({
           total_stok: Math.max(0, master.total_stok - 1),
           stok_tersedia: status === 'tersedia' ? Math.max(0, master.stok_tersedia - 1) : master.stok_tersedia
         }).eq("id", masterId);
+        if (updateMasterError) throw updateMasterError;
       }
 
-      await supabase.from("buku_item").delete().eq("id", itemId);
+      const { error: deleteError } = await supabase.from("buku_item").delete().eq("id", itemId);
+      if (deleteError) throw deleteError;
+
       toast.success("Unit Buku Berhasil Dihapus");
       fetchData();
-    } catch (error: any) {
-      toast.error("Gagal menghapus");
+    } catch (error: unknown) {
+      toast.error("Gagal menghapus", {
+        description: getErrorMessage(error),
+      });
     }
   };
 
   const handleUpdate = async (itemId: number, masterId: number) => {
     try {
-      await supabase.from("buku_item").update({ uid_buku: editData.uid.toUpperCase() }).eq("id", itemId);
-      await supabase.from("buku_master").update({ judul: editData.title }).eq("id", masterId);
+      const { error: itemError } = await supabase
+        .from("buku_item")
+        .update({ uid_buku: editData.uid.toUpperCase() })
+        .eq("id", itemId);
+      if (itemError) throw itemError;
+
+      const { error: masterError } = await supabase
+        .from("buku_master")
+        .update({ judul: editData.title })
+        .eq("id", masterId);
+      if (masterError) throw masterError;
       
       toast.success("Data Berhasil Diperbarui");
       setEditingId(null);
       fetchData();
-    } catch (error) {
-      toast.error("Gagal memperbarui data");
+    } catch (error: unknown) {
+      toast.error("Gagal memperbarui data", {
+        description: getErrorMessage(error),
+      });
     }
   };
 
@@ -200,7 +250,10 @@ export default function ManageBooks() {
                             <button 
                               onClick={() => {
                                 setEditingId(item.id);
-                                setEditData({ uid: item.uid_buku, title: item.buku_master?.judul });
+                                setEditData({
+                                  uid: item.uid_buku,
+                                  title: item.buku_master?.judul || "",
+                                });
                               }} 
                               className="p-2 bg-cyan-500/10 text-cyan-500 rounded-lg hover:bg-cyan-500/20 transition opacity-0 group-hover:opacity-100"
                             >

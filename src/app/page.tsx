@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { reportSupabaseError } from "@/lib/supabase-error";
 import {
   Book,
   Users,
@@ -10,11 +11,32 @@ import {
   CheckCircle,
   Activity,
 } from "lucide-react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
+
+type CatalogItem = {
+  id: number | string;
+  judul: string;
+  total_stok: number;
+  stok_tersedia: number;
+};
+
+type BorrowedBook = {
+  id: number | string;
+  waktu: string;
+  mahasiswa?: {
+    nama: string;
+  } | null;
+  buku_item?: {
+    uid_buku: string;
+    buku_master?: {
+      judul: string;
+    } | null;
+  } | null;
+};
 
 export default function LibraryDashboard() {
-  const [borrowedBooks, setBorrowedBooks] = useState<any[]>([]);
-  const [catalog, setCatalog] = useState<any[]>([]);
+  const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>([]);
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [stats, setStats] = useState({
     total: 0,
     members: 0,
@@ -24,13 +46,22 @@ export default function LibraryDashboard() {
 
   const fetchData = async () => {
     // 1. Ambil Data Master & Mahasiswa (Tetap sama)
-    const { data: masters } = await supabase.from("buku_master").select("*");
-    const { count: sCount } = await supabase
+    const { data: masters, error: mastersError } = await supabase
+      .from("buku_master")
+      .select("*");
+    if (mastersError) {
+      reportSupabaseError("Gagal mengambil data buku", mastersError);
+    }
+
+    const { count: sCount, error: studentsError } = await supabase
       .from("mahasiswa")
       .select("*", { count: "exact", head: true });
+    if (studentsError) {
+      reportSupabaseError("Gagal menghitung data mahasiswa", studentsError);
+    }
 
     // 2. QUERY PERBAIKAN: Ambil judul melalui buku_item
-    const { data: borrowed } = await supabase
+    const { data: borrowed, error: borrowedError } = await supabase
       .from("transaksi")
       .select(
         `
@@ -46,6 +77,9 @@ export default function LibraryDashboard() {
       )
       .eq("status", "pinjam")
       .order("waktu", { ascending: false });
+    if (borrowedError) {
+      reportSupabaseError("Gagal mengambil data peminjaman", borrowedError);
+    }
 
     if (masters) {
       const totalBuku = masters.reduce((acc, curr) => acc + curr.total_stok, 0);
@@ -59,16 +93,18 @@ export default function LibraryDashboard() {
         borrowed: totalBuku - tersediaBuku,
         available: tersediaBuku,
       });
-      setCatalog(masters);
+      setCatalog(masters as CatalogItem[]);
     }
 
     if (borrowed) {
       console.log("Data Peminjaman:", borrowed); // Untuk cek di console log browser
-      setBorrowedBooks(borrowed);
+      setBorrowedBooks(borrowed as unknown as BorrowedBook[]);
     }
   };
   useEffect(() => {
-    fetchData();
+    queueMicrotask(() => {
+      fetchData();
+    });
 
     const channel = supabase
       .channel("library_main_system")
@@ -266,7 +302,6 @@ export default function LibraryDashboard() {
           </section>
         </div>
       </div>
-      <Toaster theme="dark" position="top-right" richColors />
     </div>
   );
 }
