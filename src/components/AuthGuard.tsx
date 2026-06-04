@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -25,7 +24,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       if (!session) {
         router.replace("/login");
       } else {
-        setAuthorized(true);
         setLoading(false);
       }
     };

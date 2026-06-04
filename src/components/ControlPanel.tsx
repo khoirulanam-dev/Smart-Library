@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import mqtt from "mqtt";
-import { Lock, Unlock, Power } from "lucide-react";
+import { Lock, Unlock } from "lucide-react";
 
 export default function ControlPanel() {
   const [loading, setLoading] = useState(false);

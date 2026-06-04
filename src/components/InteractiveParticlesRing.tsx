@@ -157,15 +157,36 @@ export default function InteractiveParticlesRing() {
       };
     };
 
-    const idleHandle = win.requestIdleCallback
-      ? win.requestIdleCallback(startScene, { timeout: 1200 })
-      : window.setTimeout(startScene, 800);
+    let started = false;
+    let idleHandle: number | undefined;
+
+    const scheduleStart = () => {
+      if (started || disposed) return;
+      started = true;
+      window.clearTimeout(fallbackHandle);
+
+      idleHandle = win.requestIdleCallback
+        ? win.requestIdleCallback(startScene, { timeout: 1600 })
+        : window.setTimeout(startScene, 250);
+    };
+
+    const mount = mountRef.current;
+    const fallbackHandle = window.setTimeout(scheduleStart, 6000);
+
+    mount?.addEventListener("pointerenter", scheduleStart, { once: true });
+    mount?.addEventListener("pointermove", scheduleStart, { once: true });
+    mount?.addEventListener("touchstart", scheduleStart, { once: true });
 
     return () => {
       disposed = true;
-      if (win.cancelIdleCallback) {
+      window.clearTimeout(fallbackHandle);
+      mount?.removeEventListener("pointerenter", scheduleStart);
+      mount?.removeEventListener("pointermove", scheduleStart);
+      mount?.removeEventListener("touchstart", scheduleStart);
+
+      if (idleHandle !== undefined && win.cancelIdleCallback) {
         win.cancelIdleCallback(idleHandle);
-      } else {
+      } else if (idleHandle !== undefined) {
         window.clearTimeout(idleHandle);
       }
       cleanupScene?.();
