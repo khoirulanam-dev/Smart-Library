@@ -66,6 +66,8 @@ export default function Navbar() {
         {/* Profile Link */}
         <Link
           href="/profile"
+          aria-label="Buka profil"
+          title="Buka profil"
           className={`p-2 rounded-full border transition ${
             pathname === "/profile"
               ? "border-cyan-500 text-cyan-500"
@@ -79,6 +81,8 @@ export default function Navbar() {
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
+          aria-label={isLoggingOut ? "Sedang logout" : "Logout"}
+          title={isLoggingOut ? "Sedang logout" : "Logout"}
           className="p-2 rounded-full border border-zinc-800 text-zinc-500 hover:border-red-500 hover:text-red-500 transition-all flex items-center gap-2 group"
         >
           {isLoggingOut ? (

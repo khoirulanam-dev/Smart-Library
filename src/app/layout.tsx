@@ -31,9 +31,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Navbar />
-        <AuthGuard>{children}</AuthGuard>
+        <main>
+          <AuthGuard>{children}</AuthGuard>
+        </main>
         <Toaster theme="dark" position="top-right" richColors />
       </body>
     </html>

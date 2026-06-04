@@ -9,10 +9,16 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-family: var(--font-geist-mono), "Fira Code", monospace;
   transition:
     background-color 180ms ease,
     color 180ms ease;
+}
+
+.text-zinc-500,
+.text-zinc-600,
+.text-zinc-700 {
+  color: #a1a1aa;
 }
 
 /* Efek Glow untuk Tabel */
